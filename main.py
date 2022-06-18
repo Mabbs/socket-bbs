@@ -86,9 +86,9 @@ def tcp_link(sock,addr):
     sock.send(body.encode('utf-8')) #发送TCP数据
     sock.close()  # 关闭连接
     
-    
 def processor(request, cursor):
     userinfo = {}
+    nologin = (["HTTP/1.0 401 Auth Require", "Content-Type: text/html; charset=utf-8"], "Auth Require")
     cookies = request.dictcookie()
     if "session" in cookies:
         if cookies["session"][0] in session:
@@ -121,11 +121,15 @@ def processor(request, cursor):
             return (["HTTP/1.0 200 OK", "Content-Type: text/html; charset=utf-8"], '<script>alert("注册失败！");history.back();</script>')
         
     elif request.url.path == "/api/forum":
+        if not userinfo:
+            return nologin
         cursor.execute("SELECT * FROM forum")
         forumdata = cursor.fetchall()
         return (["HTTP/1.0 200 OK", "Content-Type: application/json; charset=utf-8"], json.dumps({'code': 0, 'data': forumdata}))
         
     elif request.url.path == "/api/postlist":
+        if not userinfo:
+            return nologin
         query = request.dictquery()
         if "id" not in query:
             return (["HTTP/1.0 404 Not Found", "Content-Type: application/json; charset=utf-8"], json.dumps({'code': 1, 'data': 'Not Found'}))
@@ -136,7 +140,8 @@ def processor(request, cursor):
         return (["HTTP/1.0 200 OK", "Content-Type: application/json; charset=utf-8"], json.dumps({'code': 0, 'data': postsdata}))
     
     elif request.url.path == "/page/newpost":
-        print(request.dictdata())
+        if not userinfo:
+            return nologin
         forum_id = request.dictquery()["id"][0]
         post_title = request.dictdata()["title"][0]
         post_content = request.dictdata()["content"][0]
@@ -148,10 +153,33 @@ def processor(request, cursor):
             info = "发帖失败！"
         return (["HTTP/1.0 200 OK", "Content-Type: text/html; charset=utf-8"], '<script>alert("' + info + '");location.href = "/postlist.html?id=' + forum_id + '";</script>')
         
-        
-    elif request.url.path == "/something":
-        return (["HTTP/1.0 200 OK", "Content-Type: application/json; charset=utf-8"], '{"code": 0, "data": "something"}')
+    elif request.url.path == "/api/showpost":
+        if not userinfo:
+            return nologin
+        query = request.dictquery()
+        if "id" not in query:
+            return (["HTTP/1.0 404 Not Found", "Content-Type: application/json; charset=utf-8"], json.dumps({'code': 1, 'data': 'Not Found'}))
+        if not query["id"][0]:
+            return (["HTTP/1.0 404 Not Found", "Content-Type: application/json; charset=utf-8"], json.dumps({'code': 1, 'data': 'Not Found'}))
+        cursor.execute("SELECT post.title, users.username, post.content, CAST(post.time AS CHAR) FROM post INNER JOIN users ON post.author_id = users.id WHERE post.id = %s",(query["id"][0],))
+        mainpost = cursor.fetchone()
+        cursor.execute("SELECT users.username, post.content, CAST(post.time AS CHAR) FROM post INNER JOIN users ON post.author_id = users.id WHERE post.parent_post_id = %s",(query["id"][0],))
+        postreply = cursor.fetchall()
+        return (["HTTP/1.0 200 OK", "Content-Type: application/json; charset=utf-8"], json.dumps({'code': 0, 'data': {'mainpost': mainpost, 'postreply': postreply}}))
 
+    elif request.url.path == "/api/replypost":
+        if not userinfo:
+            return nologin
+        post_id = request.dictquery()["id"][0]
+        post_content = request.data
+        author_id = userinfo["uid"]
+        try:
+            cursor.execute("INSERT INTO post(`content`, `author_id`, `parent_post_id`, `forum_id`, `time`) VALUES (%s, %s, %s, (SELECT temp.forum_id from (SELECT `forum_id` FROM post WHERE `id` = %s) temp), now())",(post_content, author_id, post_id, post_id,))
+            return (["HTTP/1.0 200 OK", "Content-Type: text/html; charset=utf-8"], 'OK')
+        except Exception as e:
+            return (["HTTP/1.0 500 Fail", "Content-Type: text/html; charset=utf-8"], repr(e))
+        
+        
     else:
         fileaddr = PROJECT_PATH + request.url.path
         if os.path.isfile(fileaddr):

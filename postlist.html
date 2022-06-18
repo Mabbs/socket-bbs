@@ -87,9 +87,9 @@ td,th {
     xhr.onreadystatechange=function () {    //监听后台接收请求状态的变化
         if (xhr.readyState==4){             //判断当前请求进行到何种状态，属性值 4 表示后台已经接收到前台请求
             if (xhr.status==200){           //判断前台是否准确接收到后台反馈的数据，属性值 200 表示通信成功
-                var forumdata = JSON.parse(xhr.responseText);   //解析返回结果转换为对象
-                forumdata.data.forEach(function(element) {
-                    var table = document.getElementById("posttable");
+                var postsdata = JSON.parse(xhr.responseText);   //解析返回结果转换为对象
+                var table = document.getElementById("posttable");
+                postsdata.data.forEach(function(element) {
                     var tr = document.createElement('tr');
                     table.appendChild(tr);
                     var td1 = document.createElement('td');   
