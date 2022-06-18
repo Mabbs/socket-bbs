@@ -192,7 +192,7 @@ def processor(request, cursor):
             staticfile = open(fileaddr)
             staticcontent = staticfile.read()
             staticfile.close()
-            return (["HTTP/1.0 200 OK", "Content-Type: " + contenttype + "; charset=utf-8"], staticcontent)
+            return (["HTTP/1.0 200 OK", "Content-Type: " + contenttype + "; charset=utf-8", "Cache-Control: max-age=300"], staticcontent)
         else:
             return (["HTTP/1.0 404 Not Found", "Content-Type: text/html; charset=utf-8"], "404")
     cursor.close()
