@@ -1,0 +1,27 @@
+<script>
+function get() {
+        var xhr=new XMLHttpRequest();   //创建对象，准备发送Ajax请求
+        xhr.onreadystatechange=function () {    //监听后台接收请求状态的变化
+            if (xhr.readyState==4){             //判断当前请求进行到何种状态，属性值 4 表示后台已经接收到前台请求
+                if (xhr.status==200){           //判断前台是否准确接收到后台反馈的数据，属性值 200 表示通信成功
+                    console.log(xhr.responseText);  //获取后台反馈的完整数据，json串
+                    console.log(typeof xhr.responseText);   //返回结果为 string 类型
+                    console.log(JSON.parse(xhr.responseText));   //解析返回结果转换为对象
+                }
+            }
+        }
+        xhr.timeout=2000;       //超时设置单位“毫秒”！！
+        xhr.ontimeout=function(){
+            alert('访问超时，请刷新页面重新加载。')
+        }
+//      使用 get 方式发送请求：
+        xhr.open('get',"/something",true);
+        xhr.send(null);
+
+//      使用 post 方式发送请求：
+/*        xhr.open('post','xhr.php',true);
+
+        xhr.send("xxxx");*/
+    }
+</script>
+<button onclick="get()">ajax测试</button>

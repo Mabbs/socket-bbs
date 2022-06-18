@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<title>板块列表</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+ 
+<style type="text/css">
+html {
+    font-family: sans-serif;
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+ 
+body {
+    margin: 10px;
+    background-image: linear-gradient(to right,#fbc2eb,#a6c1ee);
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+ 
+td,th {
+    padding: 0;
+}
+ 
+.pure-table {
+    width: 80%;
+    margin:0 auto;
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+    border: 1px solid #cbcbcb;
+}
+ 
+.pure-table caption {
+    color: #000;
+    font: italic 85%/1 arial,sans-serif;
+    padding: 1em 0;
+    text-align: center;
+}
+ 
+.pure-table td,.pure-table th {
+    border-left: 1px solid #cbcbcb;
+    border-width: 0 0 0 1px;
+    font-size: inherit;
+    margin: 0;
+    overflow: visible;
+    padding: .5em 1em;
+}
+ 
+.pure-table thead {
+    background-color: #e0e0e0;
+    color: #000;
+    text-align: left;
+    vertical-align: bottom;
+}
+ 
+.pure-table td {
+    background-color: #f2f2f2;
+    border-width: 0 0 1px 1px;
+    border-bottom: 1px solid #cbcbcb;
+}
+
+</style>
+</head>
+<body>
+    <h1 style="text-align: center;">板块列表</h1>
+    <p><span style="text-align: center;display:block;">欢迎，<script>document.write(localStorage.getItem('username'));</script> || <a href="login.html">登出</a></span></p>
+    <table class="pure-table" id="forumtable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>板块</th>
+                <th>描述</th>
+            </tr>
+        </thead>
+    
+        <tbody>
+        </tbody>
+    </table>
+    <script>
+    var xhr=new XMLHttpRequest();   //创建对象，准备发送Ajax请求
+    xhr.onreadystatechange=function () {    //监听后台接收请求状态的变化
+        if (xhr.readyState==4){             //判断当前请求进行到何种状态，属性值 4 表示后台已经接收到前台请求
+            if (xhr.status==200){           //判断前台是否准确接收到后台反馈的数据，属性值 200 表示通信成功
+                var forumdata = JSON.parse(xhr.responseText);   //解析返回结果转换为对象
+                forumdata.data.forEach(function(element) {
+                    var table = document.getElementById("forumtable");
+                    var tr = document.createElement('tr');
+                    table.appendChild(tr);
+                    var td1 = document.createElement('td');   
+                    tr.appendChild(td1);   
+                    td1.innerHTML = element[0];
+                    var td2 = document.createElement('td');   
+                    tr.appendChild(td2);   
+                    td2.innerHTML = '<a href="postlist.html?id=' + element[0] + '">' + element[1] + "</a>";
+                    var td3 = document.createElement('td');   
+                    tr.appendChild(td3);   
+                    td3.innerHTML = element[2];
+                });
+            }
+        }
+    }
+    xhr.timeout=2000;       //超时设置单位“毫秒”！！
+    xhr.ontimeout=function(){
+        alert('访问超时，请刷新页面重新加载。');
+    }
+//  使用 get 方式发送请求：
+    xhr.open('get',"/api/forum",true);
+    xhr.send(null);
+    </script>
+</body>
+</html>
