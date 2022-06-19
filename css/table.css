@@ -3,6 +3,11 @@ html {
     -ms-text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
 }
+
+a  {
+    text-decoration-line:  none;
+    color: #2b49ff;
+}
  
 body {
     margin: 10px;
